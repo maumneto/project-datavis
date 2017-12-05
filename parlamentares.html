@@ -14,8 +14,249 @@
 
     <!-- Custom styles for this template -->
     <link href="carousel.css" rel="stylesheet">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
+   integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
+   crossorigin=""/>
+
+   <!-- Make sure you put this AFTER Leaflet's CSS -->
+   <script src="https://unpkg.com/leaflet@1.2.0/dist/leaflet.js"
+   integrity="sha512-lInM/apFSqyy1o6s89K4iQUKg6ppXEgsVxT35HbzUupEVRh2Eu9Wdl4tHj7dZO0s1uvplcYGmt3498TtHq+log=="
+   crossorigin=""></script>
+
+   <!-- Cross filter -->
+   <script src="js/crossfilter.js" charset="utf-8"></script>
+
+   <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+
+	<style>
+			#map {
+				width: 750px;
+				height: 590px;
+			}
+			.info {
+				padding: 6px 8px;
+				font: 14px/16px Arial, Helvetica, sans-serif;
+				background: white;
+				background: rgba(255,255,255,0.8);
+				box-shadow: 0 0 15px rgba(0,0,0,0.2);
+				border-radius: 5px;
+			}
+			.info h4 {
+				margin: 0 0 5px;
+				color: #777;
+			}
+
+			.legend {
+				text-align: left;
+				line-height: 18px;
+				color: #555;
+			}
+			.legend i {
+				width: 18px;
+				height: 18px;
+				float: left;
+				margin-right: 8px;
+				opacity: 0.7;
+			}
+		</style>
+
+
+
   </head>
   <body>
+
+<div class="container">
+	<h1> Parlamentares REUS no STF</h1>
+	<p>
+		Dados retirados do site da <a href="http://www.sspds.ce.gov.br/">SSPDS</a>.
+	</p>	
+    <div id="map">
+		<strong>Homicídios por Bairro</strong>
+    </div>
+</div>
+
+<script type="text/javascript" src="brazil_geo.js"></script>
+<script type="text/javascript">
+
+	let geojson;
+
+        var StateCountMap = d3.map();
+	
+
+	d3.csv("data/homicidios_2012.csv", function(data){
+        //format data
+        data.forEach(function(d) {
+	    console.log(d.Bairro);
+        });
+		
+	});	
+
+
+        // load data from a csv file
+        d3.csv("data_csv_datavis.csv", function (data) {
+          
+          console.log(data);
+          data.forEach(function(d) { 
+
+	    console.log(d.NOME);
+
+            d.nome    = d.NOME;
+            d.cargo   = d.CARGO;
+            d.partido = d.PARTIDO;
+            d.estado  = d.ESTADO;
+            d.crime   = d.CRIME;
+
+          });
+
+           
+         //bairrosData is defined in file bairros.js		 		
+	  geojson = L.geoJson(EstadoData, {
+            style: style,
+            onEachFeature: onEachFeature
+	  }).addTo(map);
+           
+          // Run the data through crossfilter and load our 'facts'
+          var facts = crossfilter(data);
+
+          // Cria uma tabela de dados usando o Estado.
+          var StateDimension = facts.dimension(function (d) {
+          	return d.estado;
+          });
+
+          // Cria um grupo para o estado que conta o número de elementos.
+          var stateDimensionCount = StateDimension.group( );
+	  
+	  console.log(stateDimensionCount.top(1));
+	  console.log(StateCountMap.get("SC"));
+
+          //Create dataTable dimension using the date (dtg)
+	  /*
+          var dateDimension = facts.dimension(function (d) {
+          	return d.dtg;
+          });
+          
+          //Create a dimension for Magnitude
+          var magDimension = facts.dimension(function (d) {
+          	return d.mag;
+          });
+          
+          //Create a group for Magnitude that just counts the number of elements in the group
+          var magDimensionCount = magDimension.group( );
+
+          // Create a dimension for Depth
+          var depDimension = facts.dimension(function (d) {
+          	return d.depth;
+          });
+
+          //Create a group for Depth that just counts the number of elements in the group
+          var depDimensionCount = depDimension.group( );
+
+          // Create a dimension just for the hour from the datetime in the dataset
+          //hint: use d3.time.hour() function
+          var hourDimension = facts.dimension(function (d) {
+          	return d3.time.hour(d.dtg);
+          });
+	  */
+        });
+
+
+
+	let map = L.map('map').setView([-10.0,-50.50], 4);
+	L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
+	{ attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>', 
+	maxZoom: 18}).addTo(map);
+
+        // control that shows state info on hover
+	let info = L.control();
+
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info');
+		this.update();
+		return this._div;
+	};
+
+	info.update = function (feat) {
+           // console.log(feat);
+			this._div.innerHTML = '<h5> Dados de homincídios </h5>'
+			+ (feat ? feat.properties.name : 'Passe o mouse sobre um Estado');
+	//			'<b>' + feat.properties.NOME + '</b><br />' +
+			//	homicidiosByName.get(feat.properties.NOME) + ' homicídios' + '</b><br />' +
+			//	populationByName.get(feat.properties.NOME) + ' mil habitantes' + '</b><br />'
+			//	+ Math.round(100 * homicidiosByName.get(feat.properties.NOME) / 
+                        //        populationByName.get(feat.properties.NOME)) + ' homicídios por 100 mil hab'
+			//	:
+		//		'Passe o mouse sobre um bairro');
+	};
+
+	info.addTo(map);
+
+
+	function style(feature) {
+		 return {
+					weight: 1,
+					opacity: 1,
+					color: 'white',
+					dashArray: '3',
+					fillOpacity: 0.6,
+					fillColor: 'black'
+				};
+	}
+	function highlightFeature(e) {
+		let layer = e.target;
+        //console.log(e.target)
+
+		layer.setStyle({
+					weight: 2,
+					color: '#AAA',
+					dashArray: '',
+					fillOpacity: 0.7
+		});
+
+		if (!L.Browser.ie && !L.Browser.opera) {
+			layer.bringToFront();
+		}
+
+		info.update(layer.feature);
+	}
+        function resetHighlight(e) {
+		geojson.resetStyle(e.target);
+		info.update();
+	}
+
+	function zoomToFeature(e) {
+		map.fitBounds(e.target.getBounds());
+	}
+
+        function onEachFeature(feature, layer) {
+		layer.on({
+					mouseover: highlightFeature,
+					mouseout: resetHighlight,
+					click: zoomToFeature
+				});
+	}
+
+/*
+        d3.csv("data_csv_datavis.csv", function (data) {
+          data.forEach(function(d) {
+	    d.Nome    = d.Nome;
+	    d.Cargo   = d.CARGO;
+	    d.Partido = d.Partido;
+	    d.ESTADO  = d.Estado;
+	    d.CRIME   = d.Crime;
+	  });
+
+        //bairrosData is defined in file bairros.js		 		
+	  geojson = L.geoJson(EstadoData, {
+            style: style,
+            onEachFeature: onEachFeature
+	  }).addTo(map);
+	});
+*/
+	
+
+</script>
 
     <header>
       <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
