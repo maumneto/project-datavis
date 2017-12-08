@@ -1,7 +1,7 @@
 function Network() {
   var allData = [],
-      width = 960,
-      height = 800,
+      width = 400,
+      height = 400,
       // our force directed layout
       force = d3.layout.force(), 
       // these will point to the circles and lines
@@ -67,14 +67,15 @@ function Network() {
       n.y = randomnumber = Math.floor(Math.random() * height);
       
       // add radius to the node so we can use it later
-      n.radius = circleRadius(n.ednum);
+      n.radius = circleRadius(n.value/20);
     });
 
     // Create linear color map.
+    var color2= d3.scale.ordinal( ).domain([0, count/2, count]).range(colorbrewer.Paired[12]);
     var color = d3.scale.linear().domain([0, count/2, count]).range(["red", "green", "blue"]);    
 
     // Set color of each node according with color map.
-    data.nodes.forEach(function(n) { n.color = color(n.label); });
+    data.nodes.forEach(function(n) { n.color = color2(n.label); });
 
     // Then we will create a map with
     // id's -> node objects
@@ -95,7 +96,8 @@ function Network() {
     var content;
     content = '<p class="main">' + d.id + '</span></p>';
     content += '<hr class="tooltip-hr">';
-    content += '<p class="main">' + d.ednum + '</span></p>';
+    content += '<p class="main">'+ "Ações: " + d.value + '</span></p>';
+    content += '<p class="main">'+ "Parcerias: " + d.ednum + '</span></p>';
     tooltip.showTooltip(content, d3.event);
     
     // highlight the node being moused over

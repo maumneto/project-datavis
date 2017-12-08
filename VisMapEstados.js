@@ -1,9 +1,13 @@
 	let geojson;
         var StateCountMap = d3.map();
-        let brewerColors = colorbrewer.Reds[3];
+        var StateNamesMap = d3.map();
+	var NameCountMap  = d3.map( );
+        var line;
+        let brewerColors = colorbrewer.Reds[9];
 
         // load data from a csv file
-        d3.csv("data_csv_datavis.csv", function (data) {
+        d3.csv("data_new.csv", function (data) {
+
           data.forEach(function(d) { 
             d.nome    = d.NOME;
             d.cargo   = d.CARGO;
@@ -17,67 +21,58 @@
 	    else
 	      StateCountMap.set(d.estado,StateCountMap.get(d.estado)+1);
           });
-
-	  console.log(StateCountMap);
-
            
          //bairrosData is defined in file bairros.js		 		
 	  geojson = L.geoJson(EstadoData, {
             style: style,
             onEachFeature: onEachFeature
 	  }).addTo(map);
-           
-          // Run the data through crossfilter and load our 'facts'
-          var facts = crossfilter(data);
-
-          // Cria uma tabela de dados usando o Estado.
-          var StateDimension = facts.dimension(function (d) {
-          	return d.estado;
-          });
-
-          // Cria um grupo para o estado que conta o número de elementos.
-          var stateDimensionCount = StateDimension.group( );
-	  
-	  console.log(stateDimensionCount.top(1));
-	  console.log(StateCountMap.get("SC"));
-
-          //Create dataTable dimension using the date (dtg)
-	  /*
-          var dateDimension = facts.dimension(function (d) {
-          	return d.dtg;
-          });
           
-          //Create a dimension for Magnitude
-          var magDimension = facts.dimension(function (d) {
-          	return d.mag;
-          });
-          
-          //Create a group for Magnitude that just counts the number of elements in the group
-          var magDimensionCount = magDimension.group( );
+        // Run the data through crossfilter and load our 'facts'
+        var facts = crossfilter(data);
 
-          // Create a dimension for Depth
-          var depDimension = facts.dimension(function (d) {
-          	return d.depth;
-          });
-
-          //Create a group for Depth that just counts the number of elements in the group
-          var depDimensionCount = depDimension.group( );
-
-          // Create a dimension just for the hour from the datetime in the dataset
-          //hint: use d3.time.hour() function
-          var hourDimension = facts.dimension(function (d) {
-          	return d3.time.hour(d.dtg);
-          });
-	  */
+        // Create dataTable dimension using the party.
+        var nameDimension = facts.dimension(function (d) {
+        	return d.nome;
         });
 
+        //Create a group for name that just counts the number of elements in the group
+        var nameDimensionCount = nameDimension.group( );
+        
+	// Cria o mapa que contém o somatório dos nomes
+	var nameCountVec = nameDimensionCount.top(Infinity);
+	var nameSize     = nameDimensionCount.size( );
 
+        for(var i = 0; i < nameSize; ++i)
+	  NameCountMap.set(nameCountVec[i].key,nameCountVec[i].value);
 
-	let map = L.map('map', {maxBoundsViscosity: 1.0}).setView([-10.0,-50.50], 4);
+	console.log(NameCountMap);
 
-	L.tileLayer("https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-	{ attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>', 
-	maxZoom: 18,maxBoundsViscosity: 1.0}).addTo(map);
+       // Cria o mapa de estados 
+       var MapAux = d3.map( );
+
+       data.forEach(function(d) {
+            if (MapAux.get(d.nome) == null)
+	    {
+              // Forma a sting relacionda ao registro atual.
+              line = d.nome + " (" + d.partido + "): " +
+	      NameCountMap.get(d.nome) +"<br>"; 
+
+	      MapAux.set(d.nome,1);
+	 
+              // Adiciona esta string no mapa de Nomes por estado.
+	      if (StateNamesMap.get(d.estado) == null)
+                StateNamesMap.set(d.estado,line);
+	      else
+	        StateNamesMap.set(d.estado,StateNamesMap.get(d.estado)+line);
+            }
+          });
+        });
+
+	let map = L.map('map', {zoomControl:false, dragging: false,
+	doubleClickZoom : false, boxZoom: false, zoomAnimation: false,
+	scrollWheelZoom: false,bounceAtZoomLimits: false , maxBoundsViscosity: 1.0, 
+        closePopupOnClick:false  }).setView([-10.0,-50.50], 4);
 
         // control that shows state info on hover
 	let info = L.control();
@@ -89,16 +84,17 @@
 	};
 
 	info.update = function (feat) {
-			this._div.innerHTML = '<h5> Quantidade de Crimes </h5>'
-			+ (feat ? (feat.properties.name + ":" +
-			StateCountMap.get(feat.properties.sigla) ) : 'Passe o mouse sobre um Estado');
+			this._div.innerHTML = '<h5> Processos </h5>'
+			+ (feat ? ("("+feat.properties.sigla + ") Total: " + 
+                        StateCountMap.get(feat.properties.sigla) + "<br><br>" +
+			StateNamesMap.get(feat.properties.sigla) ) : 'Passe o mouse sobre um Estado');
 	};
 
 	info.addTo(map);
 	
 	// get color depending on number of cases
 	let quantize = d3.scale.linear()
-                         .domain([0,5])
+                         .domain([0,8,13,16,25,35,50,55,60])
                          .range(brewerColors);
 
 	function style(feature) 
@@ -115,7 +111,6 @@
 	}
 	function highlightFeature(e) {
 		let layer = e.target;
-        //console.log(e.target)
 
 		layer.setStyle({
 					weight: 2,
@@ -130,6 +125,7 @@
 
 		info.update(layer.feature);
 	}
+
         function resetHighlight(e) {
 		geojson.resetStyle(e.target);
 		info.update();
@@ -146,4 +142,31 @@
 					click: zoomToFeature
 				});
 	}
+
+
+        let legend = L.control({position: 'bottomright'});
+
+	legend.onAdd = function (map) {
+
+		let div = L.DomUtil.create('div', 'info legend'),
+			labels = [],
+            n = brewerColors.length,
+			from, to;
+
+			console.log(n);
+
+		for (let i = 0; i < n; i++) {
+			let c = brewerColors[i];
+            let fromto = quantize.domain( );//   invertExtent(c);
+			labels.push(
+				'<i style="background:' + brewerColors[i] + '"></i> ' +
+				d3.round(fromto[i]) + (d3.round(fromto[i+1]) ? '&ndash;' + d3.round(fromto[i+1]) : '+'));
+		}
+
+		div.innerHTML = labels.join('<br>');
+		return div;
+	};
+
+   	legend.addTo(map);
+
 

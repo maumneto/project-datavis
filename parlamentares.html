@@ -24,6 +24,7 @@
     <!-- Custom styles for this template -->
     <link href="carousel.css" rel="stylesheet">
 
+
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.2.0/dist/leaflet.css"
    integrity="sha512-M2wvCLH6DSRazYeZRIm1JnYyh22purTM+FDB5CsyxtQJYeKq83arPe5wgbNmcFXGqiSH2XR8dT/fJISVA1r/zQ=="
@@ -40,6 +41,7 @@
    <!-- Cross filter -->
    <script src="js/crossfilter.js" charset="utf-8"></script>
 
+    <!-- dc.js -->
    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 
 	<style>
@@ -49,7 +51,7 @@
 			}
 			.info {
 				padding: 6px 8px;
-				font: 8px/10px Arial, Helvetica, sans-serif;
+				font: 14px/16px Arial, Helvetica, sans-serif;
 				background: white;
 				background: rgba(255,255,255,0.8);
 				box-shadow: 0 0 15px rgba(0,0,0,0.2);
@@ -74,6 +76,13 @@
 			}
 		</style>
 
+            <!-- Custom styles for this template -->
+            <link rel="stylesheet" href="css/starter-template.css">
+            <link rel="stylesheet" href="css/dc.css">
+            <link rel="stylesheet" href="css/styles.css">
+            <script src="js/crossfilter.js" charset="utf-8"></script>
+            <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+            <script src="js/dc.js" charset="utf-8"></script>
 
 
   </head>
@@ -108,6 +117,31 @@
     <!-- Latest compiled and minified JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
+     <div class='container-fluid'>
+              <h1> Crimes cometidos por parlamentares do Congresso
+	      Nacional </h1>
+                
+		<div id='party-chart'>
+                  <h4> Número de ações por Partido </h4>
+                </div>
+                
+		<div id='state-chart'>
+                  <h4> Número de ações por Estado </h4>
+                </div>   
+
+                <table class="table table-hover" id="dc-table-graph">
+                    <thead>
+                        <tr class="header">
+                            <th>Nome</th>
+                            <th>Cargo</th>
+                            <th>Partido</th>
+                            <th>Estado</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+
 
 <!-- Carrega os dados geométricos dos Estados Brasileiros  -->
 <script type="text/javascript" src="brazil_geo.js"></script>
@@ -120,6 +154,8 @@
 <script src="js/lesmiserablesnetworkvis.js"></script>
 <script type="text/javascript" src="VisNetPartidos.js"></script>
 
+<!-- Carrega visualização dos gráficos de barra e tabela. -->
+<script type="text/javascript" src="VisGraphTable.js"></script>
 
     <header>
       <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
