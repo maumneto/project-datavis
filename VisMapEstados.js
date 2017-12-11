@@ -72,7 +72,7 @@
 	let map = L.map('map', {zoomControl:false, dragging: false,
 	doubleClickZoom : false, boxZoom: false, zoomAnimation: false,
 	scrollWheelZoom: false,bounceAtZoomLimits: false , maxBoundsViscosity: 1.0, 
-        closePopupOnClick:false  }).setView([-10.0,-50.50], 4);
+        closePopupOnClick:false  }).setView([-12.0,-50.50], 4);
 
         // control that shows state info on hover
 	let info = L.control();
@@ -138,8 +138,7 @@
         function onEachFeature(feature, layer) {
 		layer.on({
 					mouseover: highlightFeature,
-					mouseout: resetHighlight,
-					click: zoomToFeature
+					mouseout: resetHighlight
 				});
 	}
 
