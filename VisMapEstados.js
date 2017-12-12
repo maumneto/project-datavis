@@ -4,6 +4,36 @@
 	var NameCountMap  = d3.map( );
         var line;
         let brewerColors = colorbrewer.Reds[9];
+        var StateChairMap = d3.map();
+
+        // Carrega o mapa de cadeiras por estado:
+        StateChairMap.set("AC",11);
+        StateChairMap.set("AL",12);
+        StateChairMap.set("AM",11);
+        StateChairMap.set("AP",11);
+        StateChairMap.set("BA",42);
+        StateChairMap.set("CE",25);
+        StateChairMap.set("DF",11);
+        StateChairMap.set("ES",13);
+        StateChairMap.set("GO",20);
+        StateChairMap.set("MA",21);
+        StateChairMap.set("MG",56);
+        StateChairMap.set("MS",11);
+        StateChairMap.set("MT",11);
+        StateChairMap.set("PA",20);
+        StateChairMap.set("PB",15);
+        StateChairMap.set("PE",28);
+        StateChairMap.set("PI",13);
+        StateChairMap.set("PR",33);
+        StateChairMap.set("RJ",49);
+        StateChairMap.set("RN",11);
+        StateChairMap.set("RO",11);
+        StateChairMap.set("RR",11);
+        StateChairMap.set("RS",34);
+        StateChairMap.set("SC",19);
+        StateChairMap.set("SE",11);
+        StateChairMap.set("SP",73);
+        StateChairMap.set("TO",8);
 
         // load data from a csv file
         d3.csv("data_new.csv", function (data) {
@@ -87,6 +117,8 @@
 			this._div.innerHTML = '<h5> Processos </h5>'
 			+ (feat ? ("("+feat.properties.sigla + ") Total: " + 
                         StateCountMap.get(feat.properties.sigla) + "<br><br>" +
+                        " Por cadeira: " + (StateCountMap.get(feat.properties.sigla)/StateChairMap.get(feat.properties.sigla)).toFixed(2) 
+                        + "<br><br>" +
 			StateNamesMap.get(feat.properties.sigla) ) : 'Passe o mouse sobre um Estado');
 	};
 
@@ -94,7 +126,7 @@
 	
 	// get color depending on number of cases
 	let quantize = d3.scale.linear()
-                         .domain([0,8,13,16,25,35,50,55,60])
+                         .domain([0,0.25,0.5,0.75,1.0,1.5,2.0,2.5,3.0])
                          .range(brewerColors);
 
 	function style(feature) 
@@ -106,7 +138,7 @@
 			dashArray: '3',
 			fillOpacity: 0.6,
 			fillColor: 
-			quantize(StateCountMap.get(feature.properties.sigla))
+			quantize(StateCountMap.get(feature.properties.sigla)/StateChairMap.get(feature.properties.sigla))
 		};
 	}
 	function highlightFeature(e) {
@@ -159,7 +191,8 @@
             let fromto = quantize.domain( );//   invertExtent(c);
 			labels.push(
 				'<i style="background:' + brewerColors[i] + '"></i> ' +
-				d3.round(fromto[i]) + (d3.round(fromto[i+1]) ? '&ndash;' + d3.round(fromto[i+1]) : '+'));
+				//d3.round(fromto[i]) + (d3.round(fromto[i+1]) ? '&ndash;' + d3.round(fromto[i+1]) : '+'));
+                                fromto[i] + (fromto[i+1] ? '&ndash;' + fromto[i+1] : '+'));
 		}
 
 		div.innerHTML = labels.join('<br>');
